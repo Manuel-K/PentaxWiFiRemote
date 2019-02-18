@@ -1,0 +1,1 @@
+Crossplatform application to control Pentax cameras over WiFi written in C++ using Qt 5.
