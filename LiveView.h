@@ -31,7 +31,6 @@ private:
 
 
 signals:
-    //void received_jpg(const QIcon &icon);
     void jpg_received(const QPixmap &image);
     void stopped();
 

@@ -7,12 +7,11 @@
 LiveView::LiveView()
 {
     socket = new QTcpSocket(this);
-    connect(socket, SIGNAL(connected()), this, SLOT(socket_connected()));
-    //connect(socket, &QTcpSocket::disconnected, this, [=](){ emit stopped(); });
-    connect(socket, SIGNAL(disconnected()), this, SLOT(socket_disconnected()));
+    connect(socket, &QTcpSocket::connected, this, &LiveView::socket_connected);
+    connect(socket, &QTcpSocket::disconnected, this, &LiveView::socket_disconnected);
     connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(socket_error(QAbstractSocket::SocketError)));
-    connect(socket, SIGNAL(readyRead()), this, SLOT(socket_readyRead()));
+    connect(socket, &QTcpSocket::readyRead, this, &LiveView::socket_readyRead);
 }
 
 
@@ -69,50 +68,35 @@ void LiveView::socket_disconnected()
 void LiveView::socket_error(QAbstractSocket::SocketError socketError)
 {
     qDebug() << "socket_error()" << socketError;
-
 }
 
 
 void LiveView::socket_readyRead()
 {
-    //qDebug() << "socket_readyRead()";
-    //qint64 count = socket->bytesAvailable();
-    //qDebug() << count << "bytes available";
-    //QByteArray ba = socket->readAll();
-
     image_buffer.append(socket->readAll());
     handle_image_buffer();
 }
 
 
 void LiveView::handle_image_buffer() {
-    static const QByteArray jpeg_start = QByteArrayLiteral("\xFF\xD8\xFF"); // jpg start signature;
-    static const QByteArray jpeg_end   = QByteArrayLiteral("\xFF\xD9\r\n\r\n"); // jpg end signature and http double line break;
+    // jpg start signature:
+    static const QByteArray jpeg_start = QByteArrayLiteral("\xFF\xD8\xFF");
+    // jpg end signature and http double line break:
+    static const QByteArray jpeg_end   = QByteArrayLiteral("\xFF\xD9\r\n\r\n");
 
 
-    int pos_st = image_buffer.indexOf(jpeg_start);
+    int pos_st  = image_buffer.indexOf(jpeg_start);
     int pos_end = image_buffer.indexOf(jpeg_end);
 
     if (pos_st >= 0 && pos_end >= 0) {
-        //qDebug() << "contains both jpeg_start and jpeg_end" << pos_st << pos_end;
+        // contains both jpeg_start and jpeg_end:
         if (pos_st > pos_end) {
             qDebug() << "buffer contains invalid data";
             qDebug() << "dumping everything before first jpeg start marker";
             image_buffer = image_buffer.mid(pos_st);
         } else {
-            //if (pos_st > 0) {
-            //    qDebug() << "pos_st>0: dumping previous buffer data" << image_buffer.mid(0, pos_st);
-            //}
             QByteArray image_data = image_buffer.mid(pos_st, pos_end-pos_st+2);
-            //qDebug() << image_data.size() << image_data;
             image_buffer = image_buffer.mid(pos_end+2);
-            //qDebug() << image_buffer.size() << image_buffer;
-
-            if (image_data.length() < 200) {
-                qDebug() << "WARN TOO SHORT" << image_data;
-            }
-
-            //qDebug() << "received jpg";
             image_last.loadFromData(image_data);
             emit jpg_received(image_last);
         }
