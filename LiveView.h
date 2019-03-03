@@ -12,6 +12,7 @@ class LiveView : public QObject
 public:
     LiveView();
     void start(bool highres = false);
+    void start_res(const QString &resolution);
     void stop();
     void simulate(const QString &filename, int count);
 
@@ -28,7 +29,6 @@ private:
     QTcpSocket *socket;
     QByteArray image_buffer;
     QPixmap image_last;
-
 
 signals:
     void jpg_received(const QPixmap &image);

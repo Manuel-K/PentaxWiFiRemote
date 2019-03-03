@@ -18,10 +18,16 @@ LiveView::LiveView()
 void LiveView::start(bool highres)
 {
     if (highres) {
-        resolution = "1080x720";
+        start_res("1080x720");
     } else {
-        resolution = "720x480";
+        start_res("720x480");
     }
+}
+
+
+void LiveView::start_res(const QString &resolution)
+{
+    this->resolution = resolution;
     socket->connectToHost("192.168.0.1", 80);
 }
 
